@@ -128,6 +128,21 @@
         });
       };
       
+      // If the slide references an external page, load the page into the slide.
+      $presentation.loadSlides = function ($slides) {
+      	$slides.each(function (index) {
+      		// If the slide has a data-href element, load the value of the
+      		// attribute into the slide.
+      		var $this = $(this),
+      		href = $this.data().href;
+      		
+      		if (href !== undefined) {
+      			$this.load(href);
+      		}
+      		
+      	});
+      }
+      
       //Start this thing
       $presentation.init = function() {
         $presentation.options = $.extend(config, options);
@@ -140,7 +155,9 @@
         } else {
           $presentation.slides.filter(':not(:first)').hide();
         }
-
+				// Load external slides.
+        $presentation.loadSlides($presentation.slides);
+        // Add controls.
         $presentation.addControls();
       };
       $presentation.init();
