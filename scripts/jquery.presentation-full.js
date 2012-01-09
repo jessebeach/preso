@@ -79,28 +79,29 @@
 		data = $preso.data().preso,
 		options = data.options,
 		$slides = data.slides,
-		hash = (window.location.hash) ? parseInt(window.location.hash.substr(1)) : 0,
-		currentSlide = (data.currentSlide >= 0) ? data.currentSlide : hash,
+		hash = (window.location.hash) ? parseInt(window.location.hash.substr(1)) : 1,
+		currentSlide = (data.currentSlide > 0) ? data.currentSlide : hash,
 		nextSlide = (event.data && (event.data.newSlide !== 'undefined')) ? event.data.newSlide : currentSlide,
 		$currentSlide,
-		$nextSlide;
+		$nextSlide,
+		len = $slides.length;
 		// Stop any animations that are running.
 		$slides.stop(true, true);
 		// Go forward/back from the current slide.
 		if (typeof(nextSlide) === 'string') {
 			switch (nextSlide) {
 			case 'next' :
-				nextSlide = ((currentSlide + 1) < ($slides.length)) ? (currentSlide + 1) : 0;
+				nextSlide = ((currentSlide + 1) <= (len)) ? (currentSlide + 1) : 1;
 				break;
 			case 'previous' :
-				nextSlide = ((currentSlide - 1) >= 0) ? (currentSlide - 1) : ($slides.length - 1);
+				nextSlide = ((currentSlide - 1) > 0) ? (currentSlide - 1) : len;
 				break;
 			default:
 				break;
 			}
 		}
 		// Find the slides to change.
-		$nextSlide = $slides.filter(':eq(' + nextSlide + ')');
+		$nextSlide = $slides.filter(':eq(' + (nextSlide - 1) + ')');
 		// Transition the slides according to the options.
 		switch (options.transition) {
 		case 'show/hide':
@@ -120,10 +121,10 @@
 		// Update the pager.
 		data.pager
 		.children()
-		.filter(':eq(' + currentSlide + ')')
+		.filter(':eq(' + (currentSlide - 1) + ')')
 		.removeClass('current')
 		.end()
-		.filter(':eq(' + nextSlide + ')')
+		.filter(':eq(' + (nextSlide - 1) + ')')
 		.addClass('current');
 		// Update the presentation data.
 		data.currentSlide = nextSlide;
@@ -147,12 +148,12 @@
 	  for(var i = 0; i < len; i++) {
 	    $pager.append($('<li>', {
 	    	html: $('<a>', {
-		    	href: '#' + i,
+		    	href: '#' + (i + 1),
 		    	text: (i + 1)
 		    })
 		    .on({
 			  	'click': changeSlideTrigger
-			  }, '', {newSlide: i})
+			  }, '', {newSlide: (i + 1)})
 	    })
 	    );
 	  }
@@ -198,7 +199,7 @@
 			}
 			// Up arrow key.
 			else if (event.keyCode === 38) {
-				event.data.newSlide = 0;
+				event.data.newSlide = 1;
 				changeSlideTrigger(event);
 			}
 			// Right arrow key.
@@ -208,7 +209,7 @@
 			}
 			// Down arrow key.
 			else if (event.keyCode === 40) {
-				event.data.newSlide = len - 1;
+				event.data.newSlide = len;
 				changeSlideTrigger(event);
 			}
 	  });
