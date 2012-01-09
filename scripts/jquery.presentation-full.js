@@ -42,24 +42,57 @@
 		});
 		return $items;
 	}
+  
+	// Create a presentation from the $items passed in.
+	function createPresentation ($items) {
+		var $root = this;
+		var $preso = $('<div>', {}).addClass('preso-root');
+		$items.each(function (index) {
+			var $this = $(this);
+			$preso.append($('<div>', {
+				html: $this.html().trim()
+			}));
+		});
+		$root.append($preso);
+		return $preso;
+	}
+	
+	// If the slide references an external page, load the page into the slide.
+	function loadExternalContent ($slides) {
+		$slides.each(function (index) {
+			// If the slide has a data-href element, load the value of the
+			// attribute into the slide.
+			var $this = $(this),
+			href = $this.data().href;
+			
+			if (href !== undefined) {
+				$this.load(href + ' .slide-content');
+			}
+			
+		});
+	}
 	
 	//Control the changing of the slide
-  function changeSlide (event) {
+	function changeSlide (event) {
 		event.stopPropagation();
 		var $preso = $(this),
 		data = $preso.data().preso,
+		options = data.options,
 		$slides = data.slides,
-		currentSlide = parseInt(data.currentSlide) || 0,
-		nextSlide = event.newSlide || parseInt(window.location.hash.substr(1)) || 0,
+		hash = (window.location.hash) ? parseInt(window.location.hash.substr(1)) : 0,
+		currentSlide = (data.currentSlide >= 0) ? data.currentSlide : hash,
+		nextSlide = (event.data && (event.data.newSlide !== 'undefined')) ? event.data.newSlide : currentSlide,
 		$currentSlide,
 		$nextSlide;
+		// Stop any animations that are running.
+		$slides.stop(true, true);
 		// Go forward/back from the current slide.
 		if (typeof(nextSlide) === 'string') {
 			switch (nextSlide) {
-			case 'forward' :
-				nextSlide = ((currentSlide + 1) <= ($slides.length - 1)) ? (currentSlide + 1) : 0;
+			case 'next' :
+				nextSlide = ((currentSlide + 1) < ($slides.length)) ? (currentSlide + 1) : 0;
 				break;
-			case 'backward' :
+			case 'previous' :
 				nextSlide = ((currentSlide - 1) >= 0) ? (currentSlide - 1) : ($slides.length - 1);
 				break;
 			default:
@@ -67,116 +100,119 @@
 			}
 		}
 		// Find the slides to change.
-		$currentSlide = $slides.filter(':eq(' + currentSlide + ')');
 		$nextSlide = $slides.filter(':eq(' + nextSlide + ')');
 		// Transition the slides according to the options.
-		switch (event.data.options.transition) {
+		switch (options.transition) {
 		case 'show/hide':
-			$currentSlide.hide();
+			$slides.not($nextSlide).hide();
 			$nextSlide.show();
 			break;
 		case 'slide':
-			$currentSlide.slideUp(500, function () {
-			$nextSlide.slideDown(1000)
+			$slides.not($nextSlide).slideUp(500, function () {
+				$nextSlide.slideDown(1000);
 			});
 			break;
 		default:
-			$currentSlide.fadeOut(500);
+			$slides.not($nextSlide).fadeOut(500);
 			$nextSlide.fadeIn(500)
 		}
-		        
-    // $root.find('.'+$root.options.pagerClass).children('.current').removeClass('current');
-    // $root.find('.'+$root.options.pagerClass).children(':nth-child('+newSlide+')').addClass('current');
-    // Update the presentation data.
+
+		// Update the pager.
+		data.pager
+		.children()
+		.filter(':eq(' + currentSlide + ')')
+		.removeClass('current')
+		.end()
+		.filter(':eq(' + nextSlide + ')')
+		.addClass('current');
+		// Update the presentation data.
 		data.currentSlide = nextSlide;
-  }
-  
-  //Handle clicking of a specific slide
-	function pageClick ($pager) {
-    if(!$pager.parent().hasClass('current')) {
-      $root.changeSlide($pager.parent().prevAll().length + 1);
-      $root.count = $pager.parent().prevAll().length + 1;
-    }
   }
   
   // Add presentation controls
   function addControls (event) {
-	  $root.numSlides = $root.slides.length;
+		event.stopPropagation();
+		var $preso = $(this),
+		data = $preso.data().preso,
+		options = data.options,
+		$wrapper = data.wrapper,
+		$slides = data.slides,
+		len = $slides.length;
+		
+		// The changeSlide event has to be done in the context of the preso.
+		var changeSlideTrigger = $.proxy(changeSlide, $preso);
 	  
-	  //Add in the pager
-	  var navPager = '<ol class="'+$root.options.pagerClass+'">';
-	  for(var i = 1; i < $root.numSlides+1; i++) {
-	    navPager += '<li><a href="#'+i+'">'+i+'</a></li>';
+	  //Add the pager.
+	  var $pager = $('<ol>').addClass(options.pagerClass);
+	  for(var i = 0; i < len; i++) {
+	    $pager.append($('<li>', {
+	    	html: $('<a>', {
+		    	href: '#' + i,
+		    	text: (i + 1)
+		    })
+		    .on({
+			  	'click': changeSlideTrigger
+			  }, '', {newSlide: i})
+	    })
+	    );
 	  }
-	  $root.append(navPager);
-	  
-	  if($root.currentHash) {
-	    $root.find('.'+$root.options.pagerClass).children(':nth-child('+$root.currentHash+')').addClass('current');
-	    $root.count = $root.currentHash;
-	  } else {
-	    $root.find('.'+$root.options.pagerClass).children(':first-child').addClass('current');
-	    $root.count = 1;
-	  }
+	  $pager.appendTo($wrapper);
+	  // Add the pager to the preso data.
+	  data.pager = $pager;
 	
 	  //Add in the previous/next links
-	  $root.append('<ul class="'+$root.options.prevNextClass+'"><li><a href="#prev" class="prev">'+$root.options.prevText+'</a></li><li><a href="#next" class="next">'+$root.options.nextText+'</a></li>');
-	  
-	  //When a specific page is clicked, go to that page
-	  $root.find('.'+$root.options.pagerClass).find('a').bind('click', function() {
-	    $root.pageClick($(this));
-	  });
-	  
-	  //When you click a previous/next link
-	  $root.find('.'+$root.options.prevNextClass).find('a').click(function() {
-	    $root.prevNextClick($(this).attr('class'));
-	    return false;
-	  });
+	  var $nav = $('<ul>').addClass(options.prevNextClass);
+	  $nav
+	  .append($('<li>', {
+		  	html: $('<a>', {
+			  	text: options.prevText
+			  })
+			  .on({
+			  	'click': changeSlideTrigger
+			  }, '', {newSlide: 'previous'})
+		  })
+		  .addClass('prev')
+	  )
+	  .append($('<li>', {
+		  	html: $('<a>', {
+			  	text: options.nextText
+			  })
+			  .on({
+			  	'click': changeSlideTrigger
+			  }, '', {newSlide: 'next'})
+		  })
+		  .addClass('next')
+	  )
+	  .appendTo($wrapper);
+	  // Add the nav to the preso data.
+	  data.nav = $nav;
 	  
 	  //When you hit the left arrow, go to previous slide
 	  //When you hit the right arrow, go to next slide
-	  $(document).keyup(function(e) {
-	    var action = '';
-	    if(e.keyCode === 37) {
-	      action = 'prev';
-	    } else if(e.keyCode === 39) {
-	      action = 'next';
-	    }
-	    
-	    if(action !== '') {
-	      $root.prevNextClick(action);
-	    }
+	  $(document).keyup(function(event) {
+			event.data = event.data || {};
+			// Left arrow key.
+			if (event.keyCode === 37) {
+				event.data.newSlide = 'previous';
+				changeSlideTrigger(event);
+			}
+			// Up arrow key.
+			else if (event.keyCode === 38) {
+				event.data.newSlide = 0;
+				changeSlideTrigger(event);
+			}
+			// Right arrow key.
+			else if (event.keyCode === 39) {
+				event.data.newSlide = 'next';
+				changeSlideTrigger(event);
+			}
+			// Down arrow key.
+			else if (event.keyCode === 40) {
+				event.data.newSlide = len - 1;
+				changeSlideTrigger(event);
+			}
 	  });
 	}
-	
-	// If the slide references an external page, load the page into the slide.
-  function loadSlideContent ($slides) {
-  	$slides.each(function (index) {
-  		// If the slide has a data-href element, load the value of the
-  		// attribute into the slide.
-  		var $this = $(this),
-  		href = $this.data().href;
-  		
-  		if (href !== undefined) {
-  			$this.load(href + ' .slide-content');
-  		}
-  		
-  	});
-  }
-  
-  // Pull the outline apart and create a flat presentation
-  // element using divs.
-  function createPresentation ($items) {
-  	var $root = this;
-  	var $preso = $('<div>', {}).addClass('preso-root');
-  	$items.each(function (index) {
-  		var $this = $(this);
-  		$preso.append($('<div>', {
-  			html: $this.html().trim()
-  		}));
-  	});
-  	$root.append($preso);
-  	return $preso;
-  }
 	
 	/**
    * Public methods of the Preso plugin.
@@ -194,21 +230,23 @@
       return this.each(function () {
 				// Build element specific options. Uses the Metadata plugin if available
 				// @see http://docs.jquery.com/Plugins/Metadata/metadata
-				var o = $.meta ? $.extend({}, opts, $outline.data()) : opts;
-
-				var $parent = $(this).parent();
-				var $outline = $(this).detach();
+				var o = $.meta ? $.extend({}, opts, $outline.data()) : opts,
+				$this = $(this);
+				// Wrap the presentation in a div so we have a stable context.
+				$this.wrap($('<div>').addClass('preso-wrapper'));
+				var $wrapper = $this.parent(),
+				$outline = $this.detach();
 				
 				// Make and attach the presentation to the DOM based on the outline.
 				// The outline elements will be detached from the DOM.
-				var $preso = $.proxy(createPresentation, $parent)(parseOutline($outline));
+				var $preso = $.proxy(createPresentation, $wrapper)(parseOutline($outline));
 				var $slides = $preso.children();
 				// Add the outline to the preso's data
 				$preso.data().preso = {
+					wrapper: $wrapper,
+					options: o,
 					outline: $outline,
-					slides: $slides,
-					// currentSlide is a 0-based index
-					currentSlide: 0
+					slides: $slides
 				};
 				
 				// Hide all of the slides initially
@@ -216,17 +254,16 @@
 				
 				// Event bindings
 				$preso.on({
-					'slide': changeSlide,
-					'ready': addControls
-				}, '', {
-					options: o
+					'load': loadExternalContent,
+					'prep': addControls,
+					'ready': changeSlide
 				});
-				
-				// Set up the first slide
-				$preso.trigger('slide');
-				// $preso.trigger('ready');
 				// Load external slides.
-				// this.loadSlideContent($root.slides);
+				// $preso.trigger('load');
+				// Set up the first slide.
+				$preso.trigger('prep');
+				// Add the controls.
+				$preso.trigger('ready');
       });
     },
     destroy : function () {
