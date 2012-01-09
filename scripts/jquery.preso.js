@@ -288,7 +288,6 @@
 
   // Preso plugin defaults.
   $.fn.preso.defaults = {
-		slide: '.slide',
 		pagerClass: 'nav-pager',
 		prevNextClass: 'nav-prev-next',
 		prevText: 'Previous',
