@@ -20,9 +20,9 @@
  * });
  */
 (function($) {
-  // Private variables
-  var html = $('html').get(0);
-  var textDirection = (html.dir) ? html.dir : 'ltr';
+	// Private variables
+	var html = $('html').get(0);
+	var textDirection = (html.dir) ? html.dir : 'ltr';
 	
 	// Private functions.
 	/**
@@ -42,7 +42,7 @@
 		});
 		return $items;
 	}
-  
+
 	// Create a presentation from the $items passed in.
 	function createPresentation ($items) {
 		var $root = this;
@@ -134,10 +134,10 @@
 		// Update the presentation data.
 		data.currentSlide = nextSlide;
 		window.location.hash = '#' + nextSlide;
-  }
-  
-  // Add presentation controls
-  function addControls (event) {
+	}
+	
+	// Add presentation controls
+	function addControls (event) {
 		event.stopPropagation();
 		var $preso = $(this),
 		data = $preso.data().preso,
@@ -148,55 +148,55 @@
 		
 		// The changeSlide event has to be done in the context of the preso.
 		var changeSlideTrigger = $.proxy(changeSlide, $preso);
-	  
-	  //Add the pager.
-	  var $pager = $('<ol>').addClass(options.pagerClass);
-	  for(var i = 0; i < len; i++) {
-	    $pager.append($('<li>', {
-	    	html: $('<a>', {
-		    	href: '#' + (i + 1),
-		    	text: (i + 1)
-		    })
-		    .on({
-			  	'click': changeSlideTrigger
-			  }, '', {newSlide: (i + 1)})
-	    })
-	    );
-	  }
-	  $pager.appendTo($wrapper);
-	  // Add the pager to the preso data.
-	  data.pager = $pager;
+		
+		//Add the pager.
+		var $pager = $('<ol>').addClass(options.pagerClass);
+		for(var i = 0; i < len; i++) {
+			$pager.append($('<li>', {
+				html: $('<a>', {
+					href: '#' + (i + 1),
+					text: (i + 1)
+				})
+				.on({
+					'click': changeSlideTrigger
+				}, '', {newSlide: (i + 1)})
+			})
+			);
+		}
+		$pager.appendTo($wrapper);
+		// Add the pager to the preso data.
+		data.pager = $pager;
 	
-	  //Add in the previous/next links
-	  var $nav = $('<ul>').addClass(options.prevNextClass);
-	  $nav
-	  .append($('<li>', {
-		  	html: $('<a>', {
-			  	text: options.prevText
-			  })
-			  .on({
-			  	'click': changeSlideTrigger
-			  }, '', {newSlide: 'previous'})
-		  })
-		  .addClass('prev')
-	  )
-	  .append($('<li>', {
-		  	html: $('<a>', {
-			  	text: options.nextText
-			  })
-			  .on({
-			  	'click': changeSlideTrigger
-			  }, '', {newSlide: 'next'})
-		  })
-		  .addClass('next')
-	  )
-	  .appendTo($wrapper);
-	  // Add the nav to the preso data.
-	  data.nav = $nav;
-	  
-	  //When you hit the left arrow, go to previous slide
-	  //When you hit the right arrow, go to next slide
-	  $(document).keyup(function(event) {
+		//Add in the previous/next links
+		var $nav = $('<ul>').addClass(options.prevNextClass);
+		$nav
+		.append($('<li>', {
+				html: $('<a>', {
+					text: options.prevText
+				})
+				.on({
+					'click': changeSlideTrigger
+				}, '', {newSlide: 'previous'})
+			})
+			.addClass('prev')
+		)
+		.append($('<li>', {
+				html: $('<a>', {
+					text: options.nextText
+				})
+				.on({
+					'click': changeSlideTrigger
+				}, '', {newSlide: 'next'})
+			})
+			.addClass('next')
+		)
+		.appendTo($wrapper);
+		// Add the nav to the preso data.
+		data.nav = $nav;
+		
+		//When you hit the left arrow, go to previous slide
+		//When you hit the right arrow, go to next slide
+		$(document).keyup(function(event) {
 			event.data = event.data || {};
 			// Left arrow key.
 			if (event.keyCode === 37) {
@@ -218,23 +218,23 @@
 				event.data.newSlide = len;
 				changeSlideTrigger(event);
 			}
-	  });
+		});
 	}
 	
 	/**
-   * Public methods of the Preso plugin.
-   */
-  var methods = {
-    init : function (options) {
-      // Add the dir attribute to the HTML element if it does not exist.
-      // This is part of RTL language support.
-      if ($('html').attr('dir') === undefined) {
-        $('html').attr('dir', textDirection);
-      }
-      // Build main options before element iteration.
-      var opts = $.extend({}, $.fn.preso.defaults, options);
-      // Iterate over matched elements.
-      return this.each(function () {
+	 * Public methods of the Preso plugin.
+	 */
+	var methods = {
+		init : function (options) {
+			// Add the dir attribute to the HTML element if it does not exist.
+			// This is part of RTL language support.
+			if ($('html').attr('dir') === undefined) {
+				$('html').attr('dir', textDirection);
+			}
+			// Build main options before element iteration.
+			var opts = $.extend({}, $.fn.preso.defaults, options);
+			// Iterate over matched elements.
+			return this.each(function () {
 				// Build element specific options. Uses the Metadata plugin if available
 				// @see http://docs.jquery.com/Plugins/Metadata/metadata
 				var o = $.meta ? $.extend({}, opts, $outline.data()) : opts,
@@ -271,29 +271,29 @@
 				$preso.trigger('prep');
 				// Add the controls.
 				$preso.trigger('ready');
-      });
-    },
-    destroy : function () {
-      return this.each(function () {
-        $(window).unbind('.preso');
-      });
-    }
-  };
-      
-  // Add the plugin to the jQuery fn object.
-  $.fn.preso = function (method) {
+			});
+		},
+		destroy : function () {
+			return this.each(function () {
+				$(window).unbind('.preso');
+			});
+		}
+	};
+			
+	// Add the plugin to the jQuery fn object.
+	$.fn.preso = function (method) {
 		// Method calling logic
 		if (methods[method]) {
-		  return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+			return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
 		} else if (typeof method === 'object' || ! method) {
-		  return methods.init.apply(this, arguments);
+			return methods.init.apply(this, arguments);
 		} else {
-		  $.error('Method ' +  method + ' does not exist on jQuery.preso');
+			$.error('Method ' +  method + ' does not exist on jQuery.preso');
 		}
-  };
+	};
 
-  // Preso plugin defaults.
-  $.fn.preso.defaults = {
+	// Preso plugin defaults.
+	$.fn.preso.defaults = {
 		pagerClass: 'nav-pager',
 		prevNextClass: 'nav-prev-next',
 		prevText: 'Previous',
