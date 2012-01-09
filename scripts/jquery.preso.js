@@ -58,7 +58,7 @@
 	}
 	
 	// If the slide references an external page, load the page into the slide.
-	function loadExternalContent ($slides) {
+	function loadExternalContent () {
 		event.stopPropagation();
 		var $preso = $(this),
 		data = $preso.data().preso,
@@ -158,7 +158,7 @@
 					text: (i + 1)
 				})
 				.on({
-					'click': changeSlideTrigger
+					'click.preso': changeSlideTrigger
 				}, '', {newSlide: (i + 1)})
 			})
 			);
@@ -175,7 +175,7 @@
 					text: options.prevText
 				})
 				.on({
-					'click': changeSlideTrigger
+					'click.preso': changeSlideTrigger
 				}, '', {newSlide: 'previous'})
 			})
 			.addClass('prev')
@@ -185,7 +185,7 @@
 					text: options.nextText
 				})
 				.on({
-					'click': changeSlideTrigger
+					'click.preso': changeSlideTrigger
 				}, '', {newSlide: 'next'})
 			})
 			.addClass('next')
@@ -261,9 +261,9 @@
 				
 				// Event bindings
 				$preso.on({
-					'load': loadExternalContent,
-					'prep': addControls,
-					'ready': changeSlide
+					'load.preso': loadExternalContent,
+					'prep.preso': addControls,
+					'ready.preso': changeSlide
 				});
 				// Load external slides.
 				$preso.trigger('load');
