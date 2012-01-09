@@ -59,11 +59,16 @@
 	
 	// If the slide references an external page, load the page into the slide.
 	function loadExternalContent ($slides) {
+		event.stopPropagation();
+		var $preso = $(this),
+		data = $preso.data().preso,
+		$slides = data.slides;
+	
 		$slides.each(function (index) {
-			// If the slide has a data-href element, load the value of the
-			// attribute into the slide.
+			// If the slide has an a.slide element, load the value of the
+			// href into the slide.
 			var $this = $(this),
-			href = $this.data().href;
+			href = $this.find('.slide').attr('href');
 			
 			if (href !== undefined) {
 				$this.load(href + ' .slide-content');
@@ -128,6 +133,7 @@
 		.addClass('current');
 		// Update the presentation data.
 		data.currentSlide = nextSlide;
+		window.location.hash = '#' + nextSlide;
   }
   
   // Add presentation controls
@@ -242,7 +248,7 @@
 				// The outline elements will be detached from the DOM.
 				var $preso = $.proxy(createPresentation, $wrapper)(parseOutline($outline));
 				var $slides = $preso.children();
-				// Add the outline to the preso's data
+				// Add the presentation info to the data property.
 				$preso.data().preso = {
 					wrapper: $wrapper,
 					options: o,
@@ -260,7 +266,7 @@
 					'ready': changeSlide
 				});
 				// Load external slides.
-				// $preso.trigger('load');
+				$preso.trigger('load');
 				// Set up the first slide.
 				$preso.trigger('prep');
 				// Add the controls.
